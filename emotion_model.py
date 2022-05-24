@@ -45,22 +45,9 @@ class EmotionModel:
     def get_emotion(self):
         dominant_detail_emotion = self._detail_emotion_list[self.dominant_index]
         dominant_detail_length =  len(dominant_detail_emotion)
-        dominant_power=self.emotion_order[self.dominant_index] 
-        dominant_rank = dominant_power / dominant_detail_length
         
         pos_sub_emotion = self.emotion_order[(self.dominant_index + 1)%len(self.emotion_order)]
         minus_sub_emotion = self.emotion_order[(self.dominant_index - 1)%len(self.emotion_order)]
         calc_emotion_index = int((pos_sub_emotion / (pos_sub_emotion + minus_sub_emotion)) * dominant_detail_length)
         
-        # # calc_emotion_power = 0
-        # # if (sub_emotion_power < 0):
-        # #     calc_emotion_power = dominant_power + sub_emotion_power
-        # # else:
-        # #     calc_emotion_power = sub_emotion_power
-        
-        # # final_emotion_index = (calc_emotion_power // dominant_rank) - 1
-        
-        # #   (sub_emotion_power // dominant_rank) + (dominant_detail_length // 2)
-        print(self.emotion_order)
-        print(self.emotion_order_name[self.dominant_index] , dominant_detail_emotion[int(calc_emotion_index)])
         return self.emotion_order_name[self.dominant_index] , dominant_detail_emotion[int(calc_emotion_index)]
