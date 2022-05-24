@@ -9,12 +9,12 @@ class EmotionModel:
 
     emotion_order_name = ["angry","disgust","sad","happy","surprise","fear"]
     
-    _angry_list = ["Hurt", "Threatened", "Hateful", "Mad", "Aggressive", "Frustrated", "Distant", "Critical", "Critical"]         #0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1
-    _disgust_list = ["Disapproval", "Disappointed", "Awful", "Avoidance", "Avoidance"]                                             #0, 0.25, 0.5, 0.75, 1
-    _sad_list = ["Guilty", "Abandoned", "Despair", "Depressed", "Lonely", "Bored", "Bored"]
-    _happy_list = ["Optimistic", "Intimate", "Peaceful", "Powerful", "Accepted", "Proud", "Interested", "Joyful", "Joyful"]
-    _surprise_list = ["Excited", "Amazed", "Confused", "Startled", "Startled"]
-    _fear_list = ["Scared", "Anxious", "Insecure", "Submissive", "Rejected", "Humiliated", "Humiliated"]                            #0, 0.166, 0.333, 0.5, 0.666, 0.833, 1
+    _angry_list = ["Hurt", "Threatened", "Hateful", "Mad", "Aggressive", "Frustrated", "Distant", "Critical"]         #0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1
+    _disgust_list = ["Disapproval", "Disappointed", "Awful", "Avoidance"]                                             #0, 0.25, 0.5, 0.75, 1
+    _sad_list = ["Guilty", "Abandoned", "Despair", "Depressed", "Lonely", "Bored"]
+    _happy_list = ["Optimistic", "Intimate", "Peaceful", "Powerful", "Accepted", "Proud", "Interested", "Joyful"]
+    _surprise_list = ["Excited", "Amazed", "Confused", "Startled"]
+    _fear_list = ["Scared", "Anxious", "Insecure", "Submissive", "Rejected", "Humiliated"]                            #0, 0.166, 0.333, 0.5, 0.666, 0.833, 1
     
 
     _detail_emotion_list = [
@@ -50,4 +50,4 @@ class EmotionModel:
         minus_sub_emotion = self.emotion_order[(self.dominant_index - 1)%len(self.emotion_order)]
         calc_emotion_index = int((pos_sub_emotion / (pos_sub_emotion + minus_sub_emotion)) * dominant_detail_length)
         
-        return self.emotion_order_name[self.dominant_index] , dominant_detail_emotion[int(calc_emotion_index)]
+        return self.emotion_order_name[self.dominant_index] , dominant_detail_emotion[int(calc_emotion_index)%dominant_detail_length]

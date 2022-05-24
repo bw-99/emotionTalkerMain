@@ -1,56 +1,67 @@
+from audioop import mul
 import datetime
+from queue import Queue
+from time import sleep
 from cv2 import imshow
 import cv2
 from deepface import DeepFace
 from emotion_model import EmotionModel
 from gtts import gTTS
-import playsound
 import threading
+import multiprocessing
+from emotion_tts import save_tts, speak_tts, delete_tts
 
 
 faceCascade = cv2.CascadeClassifier('haarcascade_frontface.xml')
 
-lock = threading.Lock() # threading에서 Lock 함수 가져오기
 
 image_queue = []
-music_queue = []
-speach_queue = []
 
+def emotion_tts(e, speach_queue):
 
-# 음성 파일 저장
-def save_tts():
+    music_queue = []
+    lock = threading.Lock()
+
     while True:
-        if(len(speach_queue) > 0):
-            speach = speach_queue.pop(0)
-            kor_wav = gTTS(f'{speach}')
-            music_name = f'{datetime.datetime.now().microsecond}.mp3'
-            if(lock.acquire(timeout=1)):
-                kor_wav.save(music_name)
-                music_queue.append(music_name)
-                lock.release()
+        e.wait()
 
-# 음성 파일 출력
-def speak_tts():
-    while True:
-        if(len(music_queue)>0):
-            print("음악 발견")
-            if(lock.acquire(timeout=1)):
-                music = music_queue.pop(0)
-                playsound.playsound(music)
-                lock.release()
+        th1 = threading.Thread(target=save_tts, args = (speach_queue,music_queue,lock))
+        th2 = threading.Thread(target=speak_tts, args = (music_queue,lock))
+        th3 = threading.Thread(target=delete_tts, args = (music_queue,lock))
         
+        th1.start()
+        th2.start()
+        th3.start()
+
+        th1.join()
+        th2.join()
+
+
 
 
 # 메인 함수
-def main_func():
-
+def main_func(e, speach_queue):
+    cv2.setUseOptimized(True)
     cap = cv2.VideoCapture(0)
     cap.set(3,1920) # set Width
     cap.set(4,1080) # set Height
 
+    count = 0
+
     while True:
         ret, img = cap.read(0)
         img = cv2.resize(img, (1920, 1080))
+
+        # 띄워진 창 지우기
+        if(count % 2 == 0):
+            while(len(image_queue) > 0):
+                try:
+                    cv2.destroyWindow(image_queue.pop(0))
+                except:
+                    print("e")
+                finally:
+                    print('')
+        count += 1
 
         if(ret):
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -78,9 +89,7 @@ def main_func():
 
                 dominant, current_feeling = emotion.get_emotion()
 
-                # 띄워진 창 지우기
-                if(len(image_queue) > 0):
-                    cv2.destroyWindow(image_queue.pop(0))
+                
                    
                 # 지인 인식
                 verification = DeepFace.find(image_temp, db_path = "User", enforce_detection=False)
@@ -106,8 +115,10 @@ def main_func():
                     cv2.putText(img, f'{24}years old', (x+w+30,y+h +30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,0,255))
                     cv2.putText(img, 'UNKNOWN', (x+w+30,y+h+60), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,0,255))
                     speach = f"A stranger is feeling {current_feeling}."
-
-                speach_queue.append(speach)
+                while( not speach_queue.empty()):
+                    speach_queue.get()
+                speach_queue.put(speach)
+                e.set()
             
         cv2.imshow('camera', img)
 
@@ -121,15 +132,14 @@ def main_func():
 
 
 if __name__ == "__main__":
-    th = threading.Thread(target=main_func,args=())
-    th2 = threading.Thread(target=speak_tts,args=())
-    th3 = threading.Thread(target=save_tts,args=())
+    speach_queue = multiprocessing.Queue()
+    e = multiprocessing.Event()
 
-    th.start()
-    th2.start()
-    th3.start()
 
-    th.join()
-    th2.join()
-    th3.join()
+    Pc1 = multiprocessing.Process(target=main_func,args=(e,speach_queue,))
+    Pc2 = multiprocessing.Process(target=emotion_tts,args=(e, speach_queue,))
 
+    Pc1.start()
+    Pc2.start()
+
+    # main_func(e,speach_queue)
